@@ -14,7 +14,7 @@
  *   左下 BL: 我知道   · AI知道  → 公开共识区
  *   右下 BR: 我不知道 · AI知道  → 我的盲区 (AI 可以教我)
  *
- * @module dsh-johari-window/client/JohariDockEntry
+ * @module dsh-johari-cognition-quadrant-dialog-composer/client/JohariDockEntry
  */
 
 import { useEffect, useMemo, useState, type ReactElement } from 'react'
