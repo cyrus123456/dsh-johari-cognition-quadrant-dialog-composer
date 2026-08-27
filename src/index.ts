@@ -1,5 +1,5 @@
 /**
- * dsh-johari-window — host half.
+ * dsh-johari-cognition-quadrant-dialog-composer — host half.
  *
  * The Johari Window prompt composer is a pure browser-side UI: it injects a
  * button into the conversation input dock and writes the generated prompt into
@@ -7,7 +7,7 @@
  * needed, so this half is a no-op apply that keeps the plugin loadable as a
  * standard dsh bundle entry.
  *
- * @module dsh-johari-window
+ * @module dsh-johari-cognition-quadrant-dialog-composer
  */
 
 // ---------------------------------------------------------------------------
