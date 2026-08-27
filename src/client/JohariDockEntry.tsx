@@ -17,13 +17,16 @@
  * @module dsh-johari-cognition-quadrant-dialog-composer/client/JohariDockEntry
  */
 
-import { useEffect, useMemo, useState, type ReactElement, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore, type ReactElement, type MouseEvent as ReactMouseEvent } from 'react'
 import { createPortal } from 'react-dom'
+import { dictFor, type DictKey, type LocaleService } from './locales.ts'
 
 /** Injected actions handed to the dock entry by the client apply body. */
 export interface JohariInjected {
   /** Write the composed prompt into the active session's draft. */
   setDraft: (text: string) => void
+  /** DSH locale service for reactive language switching. */
+  locale: LocaleService
 }
 
 /** Composed props: slot runtime share (sessionId) + injected verb. */
@@ -48,37 +51,45 @@ interface QuadrantMeta {
   placeholder: string
 }
 
-/** Quadrant metadata in CSS grid order: TL, TR, BL, BR. */
-const QUADRANTS: readonly QuadrantMeta[] = [
-  {
-    key: 'hidden',
-    name: '我的隐藏区',
-    desc: '我知道 · AI不知道',
-    cssClass: 'johari-q-hidden',
-    placeholder: '我掌握但 AI 还不知道的背景、偏好、约束…',
-  },
-  {
-    key: 'unknown',
-    name: '共同未知区',
-    desc: '我不知道 · AI不知道',
-    cssClass: 'johari-q-unknown',
-    placeholder: '需要双方一起探索、调研的问题…',
-  },
-  {
-    key: 'open',
-    name: '公开共识区',
-    desc: '我知道 · AI知道',
-    cssClass: 'johari-q-open',
-    placeholder: '双方都清楚的背景、共识、已知事实…',
-  },
-  {
-    key: 'blind',
-    name: '我的盲区',
-    desc: '我不知道 · AI知道',
-    cssClass: 'johari-q-blind',
-    placeholder: '我希望 AI 教我、解释清楚的领域…',
-  },
-] as const
+/** A locale dictionary record keyed by DictKey. */
+type Dict = Record<DictKey, string>
+
+/**
+ * Build quadrant metadata from the active dictionary, in CSS grid order TL, TR, BL, BR.
+ * @param dict - the active locale dictionary.
+ */
+function buildQuadrants(dict: Dict): readonly QuadrantMeta[] {
+  return [
+    {
+      key: 'hidden',
+      name: dict['q.hidden.name'],
+      desc: dict['q.hidden.desc'],
+      cssClass: 'johari-q-hidden',
+      placeholder: dict['q.hidden.placeholder'],
+    },
+    {
+      key: 'unknown',
+      name: dict['q.unknown.name'],
+      desc: dict['q.unknown.desc'],
+      cssClass: 'johari-q-unknown',
+      placeholder: dict['q.unknown.placeholder'],
+    },
+    {
+      key: 'open',
+      name: dict['q.open.name'],
+      desc: dict['q.open.desc'],
+      cssClass: 'johari-q-open',
+      placeholder: dict['q.open.placeholder'],
+    },
+    {
+      key: 'blind',
+      name: dict['q.blind.name'],
+      desc: dict['q.blind.desc'],
+      cssClass: 'johari-q-blind',
+      placeholder: dict['q.blind.placeholder'],
+    },
+  ] as const
+}
 
 /** Empty quadrant state factory. */
 function emptyQuadrants(): Record<QuadrantKey, string> {
@@ -140,22 +151,23 @@ function initialRect(): ModalRect {
  * Compose the final structured prompt from the four quadrant values.
  * Empty quadrants are skipped to keep the prompt concise.
  * @param values - the four quadrant text values.
+ * @param dict - the active locale dictionary for section headings & footer.
  * @returns the composed prompt string, or '' when all quadrants are empty.
  */
-function composePrompt(values: Record<QuadrantKey, string>): string {
+function composePrompt(values: Record<QuadrantKey, string>, dict: Dict): string {
   const sections: Array<{ heading: string; body: string }> = []
 
   if (values.open.trim()) {
-    sections.push({ heading: '公开共识区（我知道 · AI知道）', body: values.open.trim() })
+    sections.push({ heading: dict['prompt.section.open'], body: values.open.trim() })
   }
   if (values.blind.trim()) {
-    sections.push({ heading: '我的盲区（我不知道 · AI知道）', body: values.blind.trim() })
+    sections.push({ heading: dict['prompt.section.blind'], body: values.blind.trim() })
   }
   if (values.hidden.trim()) {
-    sections.push({ heading: '我的隐藏信息（我知道 · AI不知道）', body: values.hidden.trim() })
+    sections.push({ heading: dict['prompt.section.hidden'], body: values.hidden.trim() })
   }
   if (values.unknown.trim()) {
-    sections.push({ heading: '共同未知区（我不知道 · AI不知道）', body: values.unknown.trim() })
+    sections.push({ heading: dict['prompt.section.unknown'], body: values.unknown.trim() })
   }
 
   if (sections.length === 0) return ''
@@ -164,7 +176,7 @@ function composePrompt(values: Record<QuadrantKey, string>): string {
     .map((section) => `## ${section.heading}\n${section.body}`)
     .join('\n\n')
 
-  return `【乔哈里认知四象限 · 对话上下文梳理】\n\n${body}\n\n---\n请基于以上认知分布展开对话：优先解答我的盲区，结合我提供的隐藏信息作为背景，并与我共同探索未知区。`
+  return `${dict['prompt.header']}\n\n${body}\n\n---\n${dict['prompt.footer']}`
 }
 
 /**
@@ -177,6 +189,14 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
   const [values, setValues] = useState<Record<QuadrantKey, string>>(emptyQuadrants)
   // 弹窗几何状态；open 为 true 时一定有值（由 openModal 一并写入）。
   const [rect, setRect] = useState<ModalRect | null>(null)
+
+  // 响应式读取 DSH 当前语言，语言切换时自动 re-render。
+  const active = useSyncExternalStore(
+    props.locale.subscribe,
+    () => props.locale.getSnapshot().active,
+  )
+  const dict = useMemo(() => dictFor(active), [active])
+  const quadrants = useMemo(() => buildQuadrants(dict), [dict])
 
   // Close on Escape; lock body scroll while the modal is open.
   useEffect(() => {
@@ -193,7 +213,7 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
     }
   }, [open])
 
-  const composed = useMemo(() => composePrompt(values), [values])
+  const composed = useMemo(() => composePrompt(values, dict), [values, dict])
   const hasContent = composed.length > 0
 
   const handleGenerate = (): void => {
@@ -302,14 +322,14 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
         className="johari-dock-btn"
         onClick={openModal}
         data-testid="johari-dock-btn"
-        title="乔哈里认知四象限对话梳理工具"
+        title={dict['btn.title']}
       >
         <svg className="johari-dock-btn-icon" aria-hidden viewBox="0 0 16 16" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="1.5" y="1.5" width="13" height="13" rx="2" />
           <line x1="8" y1="1.5" x2="8" y2="14.5" />
           <line x1="1.5" y1="8" x2="14.5" y2="8" />
         </svg>
-        <span>乔哈里认知四象限对话梳理工具</span>
+        <span>{dict['btn.text']}</span>
       </button>
 
       {open
@@ -325,7 +345,7 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
                 className="johari-modal"
                 role="dialog"
                 aria-modal="true"
-                aria-label="乔哈里认知四象限"
+                aria-label={dict['modal.title']}
                 style={
                   rect
                     ? { position: 'fixed', left: rect.left, top: rect.top, width: rect.width, height: rect.height }
@@ -346,14 +366,14 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
                 {/* Header */}
                 <div className="johari-header">
                   <div>
-                    <h2 className="johari-title">乔哈里认知四象限</h2>
-                    <div className="johari-subtitle">按「我知道/不知道 × AI知道/不知道」梳理对话上下文</div>
+                    <h2 className="johari-title">{dict['modal.title']}</h2>
+                    <div className="johari-subtitle">{dict['modal.subtitle']}</div>
                   </div>
                   <button
                     type="button"
                     className="johari-close-btn"
                     onClick={() => setOpen(false)}
-                    aria-label="关闭"
+                    aria-label={dict['btn.close']}
                   >
                     ×
                   </button>
@@ -363,13 +383,13 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
                 <div className="johari-axis-wrap">
                   <div className="johari-y-axis-label">
                     {/*<span className="johari-y-axis-combine">AI</span>*/}
-                    ↑不知道
-                    <span className="johari-y-axis-combine">AI</span>
-                    知道↓
+                    {dict['axis.y.top']}
+                    <span className="johari-y-axis-combine">{dict['axis.y.ai']}</span>
+                    {dict['axis.y.bottom']}
                   </div>
                   <div className="johari-grid-and-x-axis">
                     <div className="johari-grid">
-                      {QUADRANTS.map((q) => (
+                      {quadrants.map((q) => (
                         <div key={q.key} className={`johari-quadrant ${q.cssClass}`}>
                           <div className="johari-quadrant-header">
                             <span className="johari-quadrant-name">{q.name}</span>
@@ -386,8 +406,8 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
                     </div>
                     {/* X-axis label */}
                     <div className="johari-x-axis-label">
-                      <span>← 我知道</span>
-                      <span>我不知道 →</span>
+                      <span>{dict['axis.x.left']}</span>
+                      <span>{dict['axis.x.right']}</span>
                     </div>
                   </div>
                 </div>
@@ -395,11 +415,13 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
                 {/* Footer */}
                 <div className="johari-footer">
                   <span className="johari-hint">
-                    {hasContent ? `已生成 ${composed.length} 字` : '填写至少一个象限后可生成 Prompt'}
+                    {hasContent
+                      ? dict['footer.hint.count'].replace('{count}', String(composed.length))
+                      : dict['footer.hint.empty']}
                   </span>
                   <div className="johari-actions">
                     <button type="button" className="johari-btn johari-btn-secondary" onClick={handleClear}>
-                      清空
+                      {dict['footer.clear']}
                     </button>
                     <button
                       type="button"
@@ -407,7 +429,7 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
                       onClick={handleGenerate}
                       disabled={!hasContent}
                     >
-                      生成 Prompt 并填入
+                      {dict['footer.generate']}
                     </button>
                   </div>
                 </div>

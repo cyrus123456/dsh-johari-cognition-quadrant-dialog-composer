@@ -10,6 +10,7 @@
 export const zh = {
   'btn.text': '乔哈里认知四象限对话梳理工具',
   'btn.title': '乔哈里认知四象限对话梳理工具',
+  'btn.close': '关闭',
   'modal.title': '乔哈里认知四象限',
   'modal.subtitle': '按「我知道/不知道 × AI知道/不知道」梳理对话上下文',
   'q.hidden.name': '我的隐藏区',
@@ -45,6 +46,7 @@ export const zh = {
 export const en = {
   'btn.text': 'Johari Cognition Quadrant',
   'btn.title': 'Johari Cognition Quadrant Dialog Composer',
+  'btn.close': 'Close',
   'modal.title': 'Johari Cognition Quadrants',
   'modal.subtitle': 'Structure context by known/unknown × AI-known/AI-unknown',
   'q.hidden.name': 'Hidden Area',
@@ -87,8 +89,31 @@ export function dictFor(active: string): Dict {
   return active.toLowerCase().startsWith('zh') ? (zh as Dict) : (en as Dict)
 }
 
-/** Minimal locale service surface we consume from ctx.locale. */
+/** Minimal locale service surface — subscribe to language changes, read snapshot. */
 export interface LocaleService {
   subscribe(callback: () => void): () => void
   getSnapshot(): { active: string }
+}
+
+/**
+ * Create a self-contained locale service backed by `document.documentElement.lang`.
+ *
+ * DSH does not expose a injectable `'locale'` service; instead it sets
+ * `<html lang="zh_CN">` (or `en`) via i18next. We MutationObserver the `lang`
+ * attribute for reactive updates, falling back to `'zh'` when unset.
+ * @returns a LocaleService instance.
+ */
+export function createDocumentLangService(): LocaleService {
+  return {
+    subscribe(callback: () => void): () => void {
+      if (typeof document === 'undefined') return () => {}
+      const observer = new MutationObserver(callback)
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] })
+      return (): void => observer.disconnect()
+    },
+    getSnapshot(): { active: string } {
+      if (typeof document === 'undefined') return { active: 'zh' }
+      return { active: document.documentElement.lang || 'zh' }
+    },
+  }
 }

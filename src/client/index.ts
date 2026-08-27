@@ -18,6 +18,7 @@
 import { createElement, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { JohariDockEntry, type JohariInjected } from './JohariDockEntry.tsx'
+import { createDocumentLangService, type LocaleService } from './locales.ts'
 // Imported as plain text via the esbuild `--loader:.css=text` option; injected
 // into a <style> tag below so the client bundle is fully self-contained.
 import cssText from './johari.css'
@@ -186,8 +187,9 @@ function writeNativeValue(el: HTMLTextAreaElement | HTMLInputElement, text: stri
  * Scan the DOM for the hero workspace row and mount/unmount the Johari button.
  * Returns a disposer that stops observing and cleans up the mounted root.
  * @param setDraft - fallback draft writer for the no-session hero page.
+ * @param locale - DSH locale service for reactive language switching.
  */
-function setupHeroWorkspaceButton(setDraft: (text: string) => void): () => void {
+function setupHeroWorkspaceButton(setDraft: (text: string) => void, locale: LocaleService): () => void {
   let root: Root | null = null
   let container: HTMLDivElement | null = null
 
@@ -199,7 +201,7 @@ function setupHeroWorkspaceButton(setDraft: (text: string) => void): () => void 
     container.dataset.dshPlugin = 'johari-window'
     container.dataset.slot = 'conversation.hero.johari'
     root = createRoot(container)
-    root.render(createElement(JohariDockEntry, { setDraft }))
+    root.render(createElement(JohariDockEntry, { setDraft, locale }))
     parent.appendChild(container)
   }
 
@@ -251,11 +253,15 @@ export const inject = ['slots', 'conversation', 'sessions']
  * Apply the browser half: inject the plugin CSS and register the Johari Window
  * dock entry into the `conversation.input.dock` slot. The entry's `inject`
  * factory resolves the active session's input shell and hands a `setDraft`
- * closure to the component.
+ * closure to the component. Language is tracked via `document.documentElement.lang`
+ * (DSH sets this via i18next) — no injectable locale service is needed.
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
   injectStyles()
+
+  // Self-contained locale service: watches <html lang> for reactive i18n.
+  const locale = createDocumentLangService()
 
   ctx.inject(['slots', 'conversation', 'sessions'], (scope: ClientContext) => {
     const sessions = scope.sessions
@@ -278,6 +284,7 @@ export function apply(ctx: ClientContext): void {
                 const shell = input.for(actx)
                 shell.setDraft(text)
               },
+              locale,
             }),
           },
           JohariDockEntry,
@@ -305,6 +312,6 @@ export function apply(ctx: ClientContext): void {
       const input = findHeroComposerInput()
       if (input === null) return
       writeNativeValue(input, text)
-    })
+    }, locale)
   }, 'johari-hero-workspace')
 }
