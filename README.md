@@ -1,6 +1,6 @@
 # dsh-johari-cognition-quadrant-dialog-composer
 
-[中文](./README.md) | [English](./README.en.md)
+[![English](https://img.shields.io/badge/Lang-English-blue?style=flat-square)](./README.en.md)
 
 乔哈里认知四象限对话梳理工具 / Johari cognition-quadrant dialog prompt composer — a DSH (DeepSeek Harness) Web UI plugin.
 
