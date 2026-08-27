@@ -1,5 +1,5 @@
 /**
- * dsh-johari-window — browser half.
+ * dsh-johari-cognition-quadrant-dialog-composer — browser half.
  *
  * Registers a dock entry in the `conversation.input.dock` slot. The entry is
  * a pill button ("乔哈里四象限") that opens a 2×2 quadrant modal; filling in
@@ -12,7 +12,7 @@
  * Failure policy: every service / slot wiring failure is logged, never thrown —
  * the web shell fails the whole boot when a plugin apply throws.
  *
- * @module dsh-johari-window/client
+ * @module dsh-johari-cognition-quadrant-dialog-composer/client
  */
 
 import type { ReactElement } from 'react'
