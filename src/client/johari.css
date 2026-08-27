@@ -1,0 +1,328 @@
+/* dsh-johari-window — dock button + modal styles. All classes prefixed with `johari-` to avoid collisions with the host UI. */
+/* Colors use the DSH semantic theme tokens (`--dsw-alias-*`) which the shell
+   redefines under body[data-ds-dark-theme], so the modal automatically tracks
+   the DSH light / dark mode. Quadrant accents keep their brand hue but are
+   blended with the theme background / label color via color-mix() so they stay
+   legible in both modes. */
+
+/* ---- Dock entry button (sits above the composer) ---- */
+/* The dock band is a column flex container with align-items: stretch (default),
+   so an entry without an explicit width / align-self gets stretched to the full
+   composer width. Pin the button to its intrinsic content width so the pill
+   stays compact, then right-align it to the composer card's right edge.
+   The dock band is wider than the composer card: on narrow viewports each side
+   has (side-clearance + dock-inset) of slack; on wide viewports the card is
+   capped by card-max-width and centered, leaving (100% - card-max-width + 2*inset)/2
+   per side. Take the max of the two so the pill's right edge tracks the card's
+   right edge in both regimes (same variables the official ag-notice dock uses). */
+.johari-dock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--dsw-alias-label-secondary);
+  background: transparent;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  user-select: none;
+  font-family: inherit;
+  /* Cancel the dock band's cross-axis stretch + main-axis grow so the pill
+     only takes its content width (see comment above). */
+  flex: 0 0 auto;
+  align-self: flex-end;
+  width: max-content;
+  /* Push the pill in from the dock band's right edge so it aligns with the
+     composer card's right edge (see comment above). */
+  margin-right: max(
+    calc(var(--dsh-composer-side-clearance, 0px) + var(--dsh-composer-dock-inset, 0px)),
+    calc((100% - var(--dsh-composer-card-max-width, 100%) + (2 * var(--dsh-composer-dock-inset, 0px))) / 2)
+  );
+}
+
+.johari-dock-btn:hover {
+  color: var(--dsw-alias-brand-primary);
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--dsw-alias-interactive-bg-hover-accent);
+}
+
+.johari-dock-btn-icon {
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+
+/* ---- Modal overlay ---- */
+.johari-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dsw-alias-bg-mask-1);
+  backdrop-filter: blur(2px);
+  animation: johari-fade-in 0.15s ease-out;
+}
+
+@keyframes johari-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ---- Modal panel ---- */
+.johari-modal {
+  width: min(640px, 92vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 1rem;
+  box-shadow: var(--dsw-shadow-lv3, 0 25px 50px -12px rgba(0, 0, 0, 0.35));
+  overflow: hidden;
+  animation: johari-slide-up 0.2s ease-out;
+}
+
+@keyframes johari-slide-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ---- Modal header ---- */
+.johari-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+  flex-shrink: 0;
+}
+
+.johari-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.johari-subtitle {
+  font-size: 0.75rem;
+  color: var(--dsw-alias-label-secondary);
+  margin-top: 0.125rem;
+}
+
+.johari-close-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  line-height: 1;
+  color: var(--dsw-alias-label-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.johari-close-btn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+/* ---- Axis labels wrapper ---- */
+.johari-axis-wrap {
+  display: flex;
+  padding: 0.75rem 1.25rem 0;
+  flex-shrink: 0;
+}
+
+.johari-y-axis-label {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--dsw-alias-label-secondary);
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.375rem;
+  white-space: nowrap;
+}
+
+/* "AI" combined into a single upright horizontal unit inside the vertical
+   label so the two letters read as one word, not stacked like an arrow. */
+.johari-y-axis-combine {
+  text-combine-upright: all;
+}
+
+.johari-grid-and-x-axis {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---- 2x2 grid ---- */
+.johari-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- Quadrant cell ---- */
+.johari-quadrant {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 0.625rem;
+  overflow: hidden;
+  background: var(--dsw-alias-bg-layer-2);
+  min-height: 130px;
+}
+
+.johari-quadrant-header {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.johari-quadrant-name {
+  font-size: 0.75rem;
+}
+
+.johari-quadrant-desc {
+  font-weight: 400;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 0.625rem;
+}
+
+.johari-quadrant textarea {
+  flex: 1;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  font-family: inherit;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-1);
+  border: none;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  resize: none;
+  outline: none;
+  min-height: 80px;
+  box-sizing: border-box;
+}
+
+.johari-quadrant textarea::placeholder {
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* Quadrant color accents (left border + header bg).
+   Each accent keeps a fixed brand hue for the left border, but the header
+   background and text are blended with the theme background / label color via
+   color-mix() so they stay legible in both light and dark modes. */
+.johari-q-open .johari-quadrant-header {
+  background: color-mix(in srgb, #22c55e 12%, var(--dsw-alias-bg-layer-2));
+  color: color-mix(in srgb, #22c55e 75%, var(--dsw-alias-label-primary));
+}
+
+.johari-q-blind .johari-quadrant-header {
+  background: color-mix(in srgb, #3b82f6 12%, var(--dsw-alias-bg-layer-2));
+  color: color-mix(in srgb, #3b82f6 75%, var(--dsw-alias-label-primary));
+}
+
+.johari-q-hidden .johari-quadrant-header {
+  background: color-mix(in srgb, #f59e0b 14%, var(--dsw-alias-bg-layer-2));
+  color: color-mix(in srgb, #f59e0b 80%, var(--dsw-alias-label-primary));
+}
+
+.johari-q-unknown .johari-quadrant-header {
+  background: color-mix(in srgb, #a855f7 14%, var(--dsw-alias-bg-layer-2));
+  color: color-mix(in srgb, #a855f7 80%, var(--dsw-alias-label-primary));
+}
+
+/* ---- X-axis label ---- */
+.johari-x-axis-label {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.25rem 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--dsw-alias-label-secondary);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+/* ---- Footer / actions ---- */
+.johari-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  flex-shrink: 0;
+}
+
+.johari-hint {
+  font-size: 0.6875rem;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.johari-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.johari-btn {
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border: 1px solid transparent;
+  font-family: inherit;
+}
+
+.johari-btn-secondary {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-1);
+  border-color: var(--dsw-alias-border-l1);
+}
+
+.johari-btn-secondary:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.johari-btn-primary {
+  color: var(--dsw-alias-label-primary-foreground);
+  background: var(--dsw-alias-button-primary-fill);
+  border-color: var(--dsw-alias-button-primary-fill);
+}
+
+.johari-btn-primary:hover {
+  background: var(--dsw-alias-button-primary-hover);
+  border-color: var(--dsw-alias-button-primary-hover);
+}
+
+.johari-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

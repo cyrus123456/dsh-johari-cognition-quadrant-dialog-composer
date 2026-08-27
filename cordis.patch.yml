@@ -1,0 +1,5 @@
+# dsh-johari-cognition-quadrant-dialog-composer bundle patch: inserts the plugin into the web profile bundle.
+# Applied as a profile bundle layer via the `dsh.bundle.patch` manifest field.
+- insert:
+    - id: johari-window
+      name: 'dsh-johari-cognition-quadrant-dialog-composer'

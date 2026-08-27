@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+lib/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+.history/
+.fleet/
+.zed/
+.mimocode
+.codeartsdoer/
+temp-scripts/
+
+# Environment
+.env
+.env.*
