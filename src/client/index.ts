@@ -15,7 +15,8 @@
  * @module dsh-johari-cognition-quadrant-dialog-composer/client
  */
 
-import type { ReactElement } from 'react'
+import { createElement, type ReactElement } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
 import { JohariDockEntry, type JohariInjected } from './JohariDockEntry.tsx'
 // Imported as plain text via the esbuild `--loader:.css=text` option; injected
 // into a <style> tag below so the client bundle is fully self-contained.
@@ -123,6 +124,66 @@ interface ClientContext {
 }
 
 // ---------------------------------------------------------------------------
+// Hero workspace button — mounts the Johari entry into the "new conversation"
+// landing page's `.wSkVaW_heroWorkspaceRow` element as its last child.
+// ---------------------------------------------------------------------------
+
+/** CSS class of the DSH hero workspace row (CSS-module-hashed, stable at runtime). */
+const HERO_WORKSPACE_CLASS = 'wSkVaW_heroWorkspaceRow'
+
+/**
+ * Scan the DOM for the hero workspace row and mount/unmount the Johari button.
+ * Returns a disposer that stops observing and cleans up the mounted root.
+ * @param setDraft - fallback draft writer for the no-session hero page.
+ */
+function setupHeroWorkspaceButton(setDraft: (text: string) => void): () => void {
+  let root: Root | null = null
+  let container: HTMLDivElement | null = null
+
+  /** Mount the Johari button as the last child of the hero row. */
+  function attach(parent: Element): void {
+    if (container !== null) return
+    container = document.createElement('div')
+    container.className = 'johari-hero-mount'
+    container.dataset.dshPlugin = 'johari-window'
+    root = createRoot(container)
+    root.render(createElement(JohariDockEntry, { setDraft }))
+    parent.appendChild(container)
+  }
+
+  /** Unmount the Johari button and remove the container. */
+  function detach(): void {
+    if (root !== null) {
+      root.unmount()
+      root = null
+    }
+    if (container !== null) {
+      container.remove()
+      container = null
+    }
+  }
+
+  /** Check whether the hero row is present and attach/detach accordingly. */
+  function scan(): void {
+    const el = document.querySelector(`.${HERO_WORKSPACE_CLASS}`)
+    if (el !== null) {
+      attach(el)
+    } else {
+      detach()
+    }
+  }
+
+  const observer = new MutationObserver(scan)
+  observer.observe(document.body, { childList: true, subtree: true })
+  scan()
+
+  return (): void => {
+    observer.disconnect()
+    detach()
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Plugin body
 // ---------------------------------------------------------------------------
 
@@ -171,4 +232,30 @@ export function apply(ctx: ClientContext): void {
       }
     })
   })
+
+  // -------------------------------------------------------------------------
+  // Hero workspace button — shown on the "new conversation" landing page.
+  // The DSH web shell renders a `.wSkVaW_heroWorkspaceRow` element when no
+  // session is active yet. We MutationObserver-scan for it and mount the
+  // Johari button as its last child. When the user enters a conversation the
+  // hero element is removed and we clean up; the dock entry above takes over.
+  // -------------------------------------------------------------------------
+  ctx.effect(() => {
+    return setupHeroWorkspaceButton((text: string): void => {
+      // Fallback setDraft for the hero (no-session) page: find the composer
+      // textarea inside the hero row and write via the native value setter +
+      // an 'input' event so React's controlled component picks up the change.
+      const hero = document.querySelector('.wSkVaW_heroWorkspaceRow')
+      if (hero === null) return
+      const textarea = hero.querySelector('textarea') as HTMLTextAreaElement | null
+      if (textarea === null) return
+      const setter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype, 'value',
+      )?.set
+      if (setter !== undefined) {
+        setter.call(textarea, text)
+        textarea.dispatchEvent(new Event('input', { bubbles: true }))
+      }
+    })
+  }, 'johari-hero-workspace')
 }

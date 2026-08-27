@@ -54,6 +54,23 @@
   line-height: 1;
 }
 
+/* ---- Hero workspace button (new conversation landing page) ---- */
+/* The hero row `.wSkVaW_heroWorkspaceRow` is a flex/row container on the
+   landing page. We mount the button as its last child and reset the dock-
+   specific positioning (margin-right, align-self, width) so the pill sits
+   naturally inline within the hero row. */
+.johari-hero-mount {
+  display: inline-flex;
+  align-items: center;
+}
+
+.johari-hero-mount .johari-dock-btn {
+  flex: none;
+  align-self: auto;
+  width: auto;
+  margin-right: 0;
+}
+
 /* ---- Modal overlay ---- */
 .johari-overlay {
   position: fixed;
