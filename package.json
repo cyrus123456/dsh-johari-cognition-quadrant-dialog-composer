@@ -16,6 +16,15 @@
     "cordis.patch.yml",
     "README.md"
   ],
+  "author": "王珠峰 <734765725@qq.com> (https://github.com/cyrus123456)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cyrus123456/dsh-johari-cognition-quadrant-dialog-composer.git"
+  },
+  "homepage": "https://github.com/cyrus123456/dsh-johari-cognition-quadrant-dialog-composer#readme",
+  "bugs": {
+    "url": "https://github.com/cyrus123456/dsh-johari-cognition-quadrant-dialog-composer/issues"
+  },
   "keywords": [
     "deepseek-harness",
     "dsh",
