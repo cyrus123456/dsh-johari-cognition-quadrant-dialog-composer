@@ -59,6 +59,18 @@
    landing page. We mount the button as its last child and reset the dock-
    specific positioning (margin-right, align-self, width) so the pill sits
    naturally inline within the hero row. */
+
+/* When the hero workspace is present (new conversation page), hide the dock
+   button so only the hero-mounted one shows. The dock slot still renders on
+   this page, but we suppress it via :has() — the hero mount's button is
+   re-exposed by the more-specific rule below. */
+body:has(.wSkVaW_heroWorkspaceRow) .johari-dock-btn {
+  display: none;
+}
+body:has(.wSkVaW_heroWorkspaceRow) .johari-hero-mount .johari-dock-btn {
+  display: inline-flex;
+}
+
 .johari-hero-mount {
   display: inline-flex;
   align-items: center;
