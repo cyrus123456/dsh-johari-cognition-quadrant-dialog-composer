@@ -142,10 +142,11 @@ function setupHeroWorkspaceButton(setDraft: (text: string) => void): () => void 
 
   /** Mount the Johari button as the last child of the hero row. */
   function attach(parent: Element): void {
-    if (container !== null) return
+    if (container !== null && container.isConnected) return
     container = document.createElement('div')
     container.className = 'johari-hero-mount'
     container.dataset.dshPlugin = 'johari-window'
+    container.dataset.slot = 'conversation.hero.johari'
     root = createRoot(container)
     root.render(createElement(JohariDockEntry, { setDraft }))
     parent.appendChild(container)
@@ -165,6 +166,11 @@ function setupHeroWorkspaceButton(setDraft: (text: string) => void): () => void 
 
   /** Check whether the hero row is present and attach/detach accordingly. */
   function scan(): void {
+    // If the container was detached from the DOM (e.g. DSH replaced the
+    // hero row on workspace switch), clean up before re-attaching.
+    if (container !== null && !container.isConnected) {
+      detach()
+    }
     const el = document.querySelector(`.${HERO_WORKSPACE_CLASS}`)
     if (el !== null) {
       attach(el)
