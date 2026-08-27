@@ -20,9 +20,9 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.25rem 0.625rem;
-  font-size: 0.75rem;
+  /* font-size: 0.75rem; */
   line-height: 1;
-  color: var(--dsw-alias-label-secondary);
+  /* color: var(--dsw-alias-label-secondary); */
   background: transparent;
   border: 1px solid var(--dsw-alias-border-l1);
   border-radius: 9999px;
@@ -50,7 +50,7 @@
 }
 
 .johari-dock-btn-icon {
-  font-size: 0.8125rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
