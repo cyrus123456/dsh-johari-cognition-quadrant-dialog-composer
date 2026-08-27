@@ -48,7 +48,7 @@
 }
 
 .johari-dock-btn-icon {
-  font-size: 1.25rem;
+  font-size: 1rem;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -104,8 +104,10 @@ body:has(.wSkVaW_heroWorkspaceRow) .johari-hero-mount .johari-dock-btn {
 
 /* ---- Modal panel ---- */
 .johari-modal {
-  width: min(640px, 92vw);
-  max-height: 88vh;
+  /* 位置与尺寸由 inline style 驱动（position: fixed + left/top/width/height），
+     以便八条边/角都能拖拽缩放。以下 min-* 仅作语义约束与兜底。 */
+  min-width: 20rem;
+  min-height: 16rem;
   display: flex;
   flex-direction: column;
   background: var(--dsw-alias-bg-layer-1);
@@ -116,6 +118,25 @@ body:has(.wSkVaW_heroWorkspaceRow) .johari-hero-mount .johari-dock-btn {
   overflow: hidden;
   animation: johari-slide-up 0.2s ease-out;
 }
+
+/* ---- 八方向缩放手柄（4 边 + 4 角） ---- */
+/* 手柄贴在弹窗边缘内侧（modal 有 overflow: hidden，无法外溢）。
+   每条边手柄为 0.5rem(8px) 窄条，角手柄为 0.875rem(14px) 方块。
+   手柄通过 z-index 浮于内容之上，只覆盖各区域的 padding 边缘，
+   不会阻挡 textarea 等可交互元素。 */
+.johari-rh {
+  position: absolute;
+  z-index: 20;
+}
+
+.johari-rh-n  { top: 0;    left: 0.5rem;  right: 0.5rem;  height: 0.5rem;   cursor: ns-resize; }
+.johari-rh-s  { bottom: 0; left: 0.5rem;  right: 0.5rem;  height: 0.5rem;   cursor: ns-resize; }
+.johari-rh-e  { right: 0;  top: 0.5rem;   bottom: 0.5rem; width: 0.5rem;    cursor: ew-resize; }
+.johari-rh-w  { left: 0;   top: 0.5rem;   bottom: 0.5rem; width: 0.5rem;    cursor: ew-resize; }
+.johari-rh-ne { top: 0;    right: 0;      width: 0.875rem; height: 0.875rem; cursor: nesw-resize; }
+.johari-rh-nw { top: 0;    left: 0;       width: 0.875rem; height: 0.875rem; cursor: nwse-resize; }
+.johari-rh-se { bottom: 0; right: 0;      width: 0.875rem; height: 0.875rem; cursor: nwse-resize; }
+.johari-rh-sw { bottom: 0; left: 0;       width: 0.875rem; height: 0.875rem; cursor: nesw-resize; }
 
 @keyframes johari-slide-up {
   from { transform: translateY(12px); opacity: 0; }
@@ -170,7 +191,9 @@ body:has(.wSkVaW_heroWorkspaceRow) .johari-hero-mount .johari-dock-btn {
 .johari-axis-wrap {
   display: flex;
   padding: 0.75rem 1.25rem;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .johari-y-axis-label {

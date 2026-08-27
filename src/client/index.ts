@@ -132,6 +132,57 @@ interface ClientContext {
 const HERO_WORKSPACE_CLASS = 'wSkVaW_heroWorkspaceRow'
 
 /**
+ * 判断元素是否为"可用"的可编辑文本控件：textarea 或文本类 input，
+ * 且未被禁用/只读、当前可见、尺寸足够大（排除隐藏/微型示例框）。
+ */
+function isUsableInput(el: Element): el is HTMLTextAreaElement | HTMLInputElement {
+  if (!(el instanceof HTMLTextAreaElement) && !(el instanceof HTMLInputElement)) return false
+  // 排除非文本类 input（按钮、复选、文件、密码等）
+  if (el instanceof HTMLInputElement) {
+    const nonTextTypes = ['hidden', 'submit', 'button', 'checkbox', 'radio', 'file', 'password', 'range', 'color', 'image', 'reset', 'search', 'email', 'url', 'tel', 'number']
+    if (nonTextTypes.includes(el.type)) return false
+  }
+  if (el.disabled || el.readOnly) return false
+  const rect = el.getBoundingClientRect()
+  if (rect.width < 100 || rect.height < 16) return false
+  const cs = getComputedStyle(el)
+  if (cs.display === 'none' || cs.visibility === 'hidden') return false
+  return true
+}
+
+/**
+ * 在新建对话（hero/landing）页面定位真正的 composer 输入框。
+ * 优先在 hero row 内查找，找不到再全局兜底；多个候选时选可见宽度最大者
+ * （composer 通常是页面最大的可编辑文本框，避免误命中示例/隐藏 textarea）。
+ * @returns 命中的输入元素，或 null。
+ */
+function findHeroComposerInput(): HTMLTextAreaElement | HTMLInputElement | null {
+  const hero = document.querySelector(`.${HERO_WORKSPACE_CLASS}`)
+  const scopes: Element[] = hero !== null ? [hero, document.body] : [document.body]
+  for (const scope of scopes) {
+    const candidates = Array.from(scope.querySelectorAll('textarea, input')).filter(isUsableInput)
+    if (candidates.length === 0) continue
+    candidates.sort((a, b) => b.getBoundingClientRect().width - a.getBoundingClientRect().width)
+    return candidates[0]
+  }
+  return null
+}
+
+/**
+ * 通过原生 value setter + 'input' 事件把文本写入受控输入元素，
+ * 使 React 受控组件感知到变化（兼容 textarea 与 input）。
+ * @param el - 目标输入元素。
+ * @param text - 要写入的文本。
+ */
+function writeNativeValue(el: HTMLTextAreaElement | HTMLInputElement, text: string): void {
+  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype
+  const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set
+  if (setter === undefined) return
+  setter.call(el, text)
+  el.dispatchEvent(new Event('input', { bubbles: true }))
+}
+
+/**
  * Scan the DOM for the hero workspace row and mount/unmount the Johari button.
  * Returns a disposer that stops observing and cleans up the mounted root.
  * @param setDraft - fallback draft writer for the no-session hero page.
@@ -248,20 +299,12 @@ export function apply(ctx: ClientContext): void {
   // -------------------------------------------------------------------------
   ctx.effect(() => {
     return setupHeroWorkspaceButton((text: string): void => {
-      // Fallback setDraft for the hero (no-session) page: find the composer
-      // textarea inside the hero row and write via the native value setter +
-      // an 'input' event so React's controlled component picks up the change.
-      const hero = document.querySelector('.wSkVaW_heroWorkspaceRow')
-      if (hero === null) return
-      const textarea = hero.querySelector('textarea') as HTMLTextAreaElement | null
-      if (textarea === null) return
-      const setter = Object.getOwnPropertyDescriptor(
-        window.HTMLTextAreaElement.prototype, 'value',
-      )?.set
-      if (setter !== undefined) {
-        setter.call(textarea, text)
-        textarea.dispatchEvent(new Event('input', { bubbles: true }))
-      }
+      // Fallback setDraft for the hero (no-session) page: 定位新建对话页真正的
+      // composer 输入框（可能在 hero row 之外、或为 input 而非 textarea），
+      // 再通过原生 value setter + 'input' 事件写入，使 React 受控组件感知变化。
+      const input = findHeroComposerInput()
+      if (input === null) return
+      writeNativeValue(input, text)
     })
   }, 'johari-hero-workspace')
 }
