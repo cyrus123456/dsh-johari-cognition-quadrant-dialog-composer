@@ -20,24 +20,29 @@
 
 ## 安装
 
-本插件为 DSH 本地插件，位于 `profiles/web/local-plugins/dsh-johari-window/`。
-
-### 构建
+### 通过 dsh plugin add（推荐）
 
 ```bash
-cd profiles/web/local-plugins/dsh-johari-window
-npm install
-npm run build
+dsh plugin add cyrus123456/dsh-johari-cognition-quadrant-dialog-composer
+```
+
+### 从源码构建
+
+```bash
+git clone https://github.com/cyrus123456/dsh-johari-cognition-quadrant-dialog-composer.git
+cd dsh-johari-cognition-quadrant-dialog-composer
+pnpm install
+pnpm run build
 ```
 
 构建产物：
 - `lib/index.js` — Host 端（Node 侧）
 - `lib/client.js` — Client 端（浏览器侧，含 CSS 注入）
 
-### 注册到 DSH Profile
+### 手动注册到 DSH Profile
 
-1. 在 `profiles/web/node_modules/` 下创建指向本插件的符号链接（junction）
-2. 在 `profiles/web/package.json` 的 `dsh.profile.bundles` 数组中添加 `"dsh-johari-window"`
+1. 在 `profiles/web/node_modules/` 下创建指向本插件的 junction
+2. 在 `profiles/web/package.json` 的 `dsh.profile.bundles` 数组中添加 `"dsh-johari-cognition-quadrant-dialog-composer"`
 3. 重启 DSH
 
 ## 技术栈
@@ -50,7 +55,7 @@ npm run build
 ## 文件结构
 
 ```
-dsh-johari-window/
+dsh-johari-cognition-quadrant-dialog-composer/
 ├── package.json
 ├── tsconfig.json
 ├── cordis.patch.yml          # DSH bundle 补丁
