@@ -383,9 +383,15 @@ export function JohariDockEntry(props: JohariDockEntryProps): ReactElement {
                 <div className="johari-axis-wrap">
                   <div className="johari-y-axis-label">
                     {/*<span className="johari-y-axis-combine">AI</span>*/}
-                    {dict['axis.y.top']}
-                    <span className="johari-y-axis-combine">{dict['axis.y.ai']}</span>
-                    {dict['axis.y.bottom']}
+                    <span>
+                      {dict['axis.y.top.arrow']}
+                      <span className="johari-y-axis-combine">{dict['axis.y.ai']}</span>
+                      {dict['axis.y.top']}
+                    </span>
+                      <span>
+                        <span className="johari-y-axis-combine">{dict['axis.y.ai']}</span>
+                      {dict['axis.y.bottom']}
+                      </span>
                   </div>
                   <div className="johari-grid-and-x-axis">
                     <div className="johari-grid">

@@ -190,7 +190,7 @@ body:has(.wSkVaW_heroWorkspaceRow) .johari-hero-mount .johari-dock-btn {
 /* ---- Axis labels wrapper ---- */
 .johari-axis-wrap {
   display: flex;
-  padding: 0.75rem 1.25rem;
+  padding: 2rem 2rem 2rem .25rem;
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
@@ -206,7 +206,7 @@ body:has(.wSkVaW_heroWorkspaceRow) .johari-hero-mount .johari-dock-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0.375rem;
+  padding: 0 0.75rem;
   white-space: nowrap;
 }
 
@@ -310,11 +310,69 @@ body:has(.wSkVaW_heroWorkspaceRow) .johari-hero-mount .johari-dock-btn {
   color: color-mix(in srgb, #a855f7 80%, var(--dsw-alias-label-primary));
 }
 
+/* Quadrant textarea color accents: 每个文本框使用对应主题色的柔和淡雅背景，外圈围绕一圈
+   柔和透明外发光（box-shadow 外阴影加在象限容器上，避免被容器 overflow:hidden 裁切）。
+   背景通过 color-mix 将少量主题色（6-7%）与弹窗背景混合，再混入 10% 黑色让亮度稍暗、
+   色调更淡，与弹窗背景区分开且在明暗主题下都柔和可读。focus 时通过 :has() 增强外发光，
+   提供清晰交互反馈。注意：johari-q-* 与 johari-quadrant 在同一元素上
+   （JSX: className={`johari-quadrant ${q.cssClass}`}`），故两个类必须连写（无空格）。 */
+.johari-q-open.johari-quadrant textarea {
+  box-shadow:
+    inset 0 0 0.5rem color-mix(in srgb, #22c55e 30%, transparent);  /* 柔和内光晕 */
+}
+
+.johari-q-open.johari-quadrant {
+  box-shadow: 0 0 0.5rem color-mix(in srgb, #22c55e 30%, transparent);
+}
+
+.johari-q-open.johari-quadrant:has(textarea:focus) {
+  box-shadow: 0 0 2.0rem color-mix(in srgb, #22c55e 45%, transparent);
+}
+
+.johari-q-blind.johari-quadrant textarea {
+  box-shadow:
+    inset 0 0 0.5rem color-mix(in srgb, #3b82f6 30%, transparent);  /* 柔和内光晕 */
+}
+
+.johari-q-blind.johari-quadrant {
+  box-shadow: 0 0 0.5rem color-mix(in srgb, #3b82f6 30%, transparent);
+}
+
+.johari-q-blind.johari-quadrant:has(textarea:focus) {
+  box-shadow: 0 0 2.0rem color-mix(in srgb, #3b82f6 45%, transparent);
+}
+
+.johari-q-hidden.johari-quadrant textarea {
+  box-shadow:
+    inset 0 0 0.5rem color-mix(in srgb, #f59e0b 30%, transparent);  /* 柔和内光晕 */
+}
+
+.johari-q-hidden.johari-quadrant {
+  box-shadow: 0 0 0.5rem color-mix(in srgb, #f59e0b 30%, transparent);
+}
+
+.johari-q-hidden.johari-quadrant:has(textarea:focus) {
+  box-shadow: 0 0 2.0rem color-mix(in srgb, #f59e0b 45%, transparent);
+}
+
+.johari-q-unknown.johari-quadrant textarea {
+  box-shadow:
+    inset 0 0 0.5rem color-mix(in srgb, #a855f7 30%, transparent);  /* 柔和内光晕 */
+}
+
+.johari-q-unknown.johari-quadrant {
+  box-shadow: 0 0 0.5rem color-mix(in srgb, #a855f7 30%, transparent);
+}
+
+.johari-q-unknown.johari-quadrant:has(textarea:focus) {
+  box-shadow: 0 0 2.0rem color-mix(in srgb, #a855f7 45%, transparent);
+}
+
 /* ---- X-axis label ---- */
 .johari-x-axis-label {
   display: flex;
   justify-content: space-between;
-  padding: 0.5rem 0.25rem 0;
+  padding: 0.75rem 0 0;
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--dsw-alias-label-secondary);
